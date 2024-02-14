@@ -9,3 +9,4 @@ def make_multiplier(multiplier: float) -> typing.Callable[[float], float]:
     def mult(x: float):
         return x * multiplier
     return mult
+
