@@ -1,34 +1,39 @@
-#!/usr/bin/env python3
-"""LRU caching"""
-from base_caching import BaseCaching
+#!/usr/bin/python3
+''' self descriptive code '''
+
+from collections import OrderedDict
+
+BaseCaching = __import__('base_caching').BaseCaching
 
 
 class MRUCache(BaseCaching):
-    """LIFO class"""
-    def __init__(self):
-        """init function"""
-        super().__init__()
-        self.remove = ""
+    ''' self descriptive '''
 
-    def get(self, key):
-        """Function that gets data from dicitonary"""
-        if key is None or key not in self.cache_data:
-            return None
-        if key:
-            self.remove = key
-        if key in self.cache_data:
-            self.cache_data[key] = self.cache_data.pop(key)
-            return self.cache_data[key]
-        else:
-            return self.cache_data[key]
+    def __init__(self):
+        super().__init__()
+        self.mru_order = OrderedDict()
 
     def put(self, key, item):
-        """Function that add new items to dictionary"""
-        if key and item:
-            self.cache_data[key] = item
-        if key is None or item is None:
+        ''' self descriptive '''
+        if not key or not item:
             return
+
+        self.cache_data[key] = item
+        self.mru_order[key] = item
+
         if len(self.cache_data) > BaseCaching.MAX_ITEMS:
-            self.cache_data.pop(self.remove)
-            print("DISCARD: {}".format(self.remove, end=""))
-            self.remove = key
+            item_discarded = next(iter(self.mru_order))
+            del self.cache_data[item_discarded]
+            print("DISCARD:", item_discarded)
+
+        if len(self.mru_order) > BaseCaching.MAX_ITEMS:
+            self.mru_order.popitem(last=False)
+
+        self.mru_order.move_to_end(key, False)
+
+    def get(self, key):
+        ''' self descriptive '''
+        if key in self.cache_data:
+            self.mru_order.move_to_end(key, False)
+            return self.cache_data[key]
+        return None
