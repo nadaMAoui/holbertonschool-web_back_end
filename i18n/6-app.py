@@ -2,11 +2,12 @@
 """Babel module"""
 from flask import Flask, request, render_template, g
 from flask_babel import Babel
+
 app = Flask(__name__)
 babel = Babel(app)
 
 
-class Config():
+class Config:
     """Configuration class"""
     LANGUAGES = ["en", "fr"]
 
@@ -14,6 +15,7 @@ class Config():
 app.config.from_object(Config)
 Babel.default_locale = 'en'
 Babel.default_timezone = 'UTC'
+
 users = {
     1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
     2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
@@ -30,24 +32,23 @@ def hello_world():
 
 @babel.localeselector
 def get_locale():
-    """function that  determine the best
-    match with our supported languages"""
-    if request.args.get('locale'):
-        return request.args.get('locale')
-    id = request.args.get('login_as')
-    if id:
-        locale = users[int(id)]['locale']
-        if locale:
-            return locale
-
-    locale = request.headers.get('locale')
-    if locale:
+    """Function that determines the best locale based on priorities."""
+    locale = request.args.get('locale')  # 1. Locale from URL parameters
+    if locale and locale in app.config['LANGUAGES']:
         return locale
-    return request.accept_languages.best_match(app.config['LANGUAGES'])
+
+    if g.user and g.user.get('locale') and g.user['locale'] in app.config['LANGUAGES']:  # 2. Locale from user settings
+        return g.user['locale']
+
+    locale = request.headers.get('locale')  # 3. Locale from request header
+    if locale and locale in app.config['LANGUAGES']:
+        return locale
+
+    return request.accept_languages.best_match(app.config['LANGUAGES'])  # 4. Default locale
 
 
 def get_user():
-    """function that returns a user dictionary"""
+    """Function that returns a user dictionary."""
     id = request.args.get('login_as')
     if id:
         return users[int(id)]
@@ -57,8 +58,7 @@ def get_user():
 
 @app.before_request
 def before_request():
-    """find a user if any, and set
-    it as a global on flask.g.user."""
+    """Find a user if any, and set it as a global on flask.g.user."""
     g.user = get_user()
 
 
