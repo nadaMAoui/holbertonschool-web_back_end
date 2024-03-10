@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
-"""Task 5"""
-from flask import Flask, g, render_template, request
+"""Babel module"""
+from flask import Flask, request, render_template, g
 from flask_babel import Babel
-
 app = Flask(__name__)
 babel = Babel(app)
+
+
+class Config():
+    """Configuration class"""
+    LANGUAGES = ["en", "fr"]
+
+
+app.config.from_object(Config)
+Babel.default_locale = 'en'
+Babel.default_timezone = 'UTC'
 users = {
     1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
     2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
@@ -13,44 +22,35 @@ users = {
 }
 
 
-class Config(object):
-    """simple configuration"""
-    LANGUAGES = ['en', 'fr']
-    BABEL_DEFAULT_LOCALE = 'en'
-    BABEL_DEFAULT_TIMEZONE = 'UTC'
-
-
-app.config.from_object(Config)
-
-
-def get_user():
-    """get user from header"""
-    id = request.args.get('login_as')
-    try:
-        return users.get(int(id))
-    except Exception:
-        return None
-
-
-@app.before_request
-def before_request():
-    """Before request used to stash user"""
-    g.user = get_user()
+@app.route('/')
+def hello_world():
+    """home route"""
+    return render_template('5-index.html')
 
 
 @babel.localeselector
 def get_locale():
-    """locale selector determining lang use for template"""
-    loc= request.args.get('locale')
-    if loc and loc in app.config['LANGUAGES']:
-        return loc
-    return request.accept_languages.best_match(Config.LANGUAGES)
+    """function that  determine the best
+    match with our supported languages"""
+    if request.args.get('locale'):
+        return request.args.get('locale')
+    else:
+        return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
-@app.route("/", methods=['GET'])
-def index():
-    """index rotue"""
-    return render_template("6-index.html")
+def get_user():
+    """function that returns a user dictionary"""
+    id = request.args.get('login_as')
+    if id:
+        return users[int(id)]
+    else:
+        return None
+
+@app.before_request
+def before_request():
+    """find a user if any, and set
+    it as a global on flask.g.user."""
+    g.user = get_user()
 
 
 if __name__ == "__main__":
