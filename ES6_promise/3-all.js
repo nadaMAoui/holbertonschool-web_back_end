@@ -1,12 +1,19 @@
-import { uploadPhoto, createUser } from "./utils.js";
+/* Handle multiple successful promises
+    Put () because return Promise resolve object
+*/
+import { createUser, uploadPhoto } from "./utils";
 
-async function handleProfileSignup() {
-  try {
-    const [photo, user] = await Promise.all([uploadPhoto(), createUser()]);
-    console.log(`${photo.body} ${user.firstName} ${user.lastName}`);
-  } catch (error) {
-    console.error("Signup system offline");
-  }
+function handleProfileSignup() {
+  return Promise.all([uploadPhoto(), createUser()])
+    .then((values) => {
+      const { body } = values[0];
+      const { firstName, lastName } = values[1];
+
+      console.log(`${body} ${firstName} ${lastName}`);
+    })
+    .catch(() => {
+      console.log("Signup system offline");
+    });
 }
 
 export default handleProfileSignup;
