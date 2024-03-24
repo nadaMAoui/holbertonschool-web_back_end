@@ -1,4 +1,7 @@
-function displayMessage(argv) {
-    console.log(argv);
-  }
-  module.exports = displayMessage;
+// 0-main.js
+
+function displayMessage(string) {
+  console.log(string);
+}
+
+module.exports = displayMessage;
